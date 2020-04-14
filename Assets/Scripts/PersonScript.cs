@@ -17,6 +17,7 @@ public class PersonScript : MonoBehaviour
     private SimulationManager SM;
 
     private Rigidbody2D RB;
+    private Vector2 Velocity;
     private GameObject InfectionSpace;
 
     void Awake()
@@ -51,12 +52,17 @@ public class PersonScript : MonoBehaviour
         }
     }
 
+    void FixedUpdate()
+    {
+        RB.velocity = Velocity;
+    }
+
     public void initialData(SimulationManager sm)
     {
         SM = sm;
         Vector2 dir = Random.insideUnitCircle.normalized;
         
-        RB.velocity = dir * SM.personSpeedInMPS * SM.sizeScale;
+        Velocity = dir * SM.personSpeedInMPS * SM.sizeScale;
     }
 
     public void setInfected()
@@ -78,25 +84,24 @@ public class PersonScript : MonoBehaviour
         InfectionSpace.SetActive(false);
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    void OnCollisionEnter2D(Collision2D other)
     {
         if(other.gameObject.layer == 8) // Layer 8: PlayerObstacle
         {
-            if(other.gameObject.name == "Left" || other.gameObject.name == "Right")
+            Vector2 normalsSum = Vector2.zero;
+
+            for(int i = 0; i < other.contactCount; i++)
             {
-                Vector2 vel = RB.velocity;
-                vel.x *= -1f;
-                RB.velocity = vel;
+                normalsSum += other.GetContact(i).normal;
             }
-            else if(other.gameObject.name == "Top" || other.gameObject.name == "Bottom")
-            {
-                
-                Vector2 vel = RB.velocity;
-                vel.y *= -1f;
-                RB.velocity = vel;
-            }
+
+            Velocity = Vector2.Reflect(Velocity, normalsSum);
         }
-        else if(other.gameObject.layer == 10) // Layer 10: PersonInfectionSpace
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if(other.gameObject.layer == 10) // Layer 10: PersonInfectionSpace
         {
             if(state != PersonState.Susceptible) return;
             infectedPeopleNear ++;
