@@ -14,8 +14,7 @@ public class SimulationManager : MonoBehaviour
     
     public float infectionRadiusInMeters = 2.0f;
     public float infectionChance = 0.2f;
-
-    public float recoveryChance = 0.01f;
+    public float recoveryChance = 0.001f;
 
     public float personSpeedInMPS = 5.0f;
 
@@ -94,22 +93,22 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-    private void onNumberOfPeopleUpdate()
-    {
-        int diff = PeopleContainer.childCount - numberOfPeople;
-        if(diff > 0)
-        {
-            for(int i = 0; i < diff; i++)
-            {
-                GameObject.Destroy(PeopleContainer.GetChild(i).gameObject);
-            }
-        }
-        else if(diff < 0)
-        {
-            for(int i = 0; i < -diff; i++)
-            {
-                addAPerson();
-            }
-        }
-    }
+    // private void onNumberOfPeopleUpdate()
+    // {
+    //     int diff = PeopleContainer.childCount - numberOfPeople;
+    //     if(diff > 0)
+    //     {
+    //         for(int i = 0; i < diff; i++)
+    //         {
+    //             GameObject.Destroy(PeopleContainer.GetChild(i).gameObject);
+    //         }
+    //     }
+    //     else if(diff < 0)
+    //     {
+    //         for(int i = 0; i < -diff; i++)
+    //         {
+    //             addAPerson();
+    //         }
+    //     }
+    // }
 }
