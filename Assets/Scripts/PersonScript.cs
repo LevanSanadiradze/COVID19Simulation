@@ -4,7 +4,14 @@ using UnityEngine;
 
 public class PersonScript : MonoBehaviour
 {
-    private bool infected = false;
+    private enum PersonState 
+    {
+        Susceptible = 0,
+        Infected = 1,
+        Recovered = 2
+    }
+
+    private PersonState state = PersonState.Susceptible;
     private int infectedPeopleNear = 0;
 
     private SimulationManager SM;
@@ -21,15 +28,25 @@ public class PersonScript : MonoBehaviour
 
     void Update()
     {
-        if(!infected && infectedPeopleNear > 0)
+        if(state == PersonState.Susceptible && infectedPeopleNear > 0)
         {
-            float dChance = Mathf.Pow(1.0f - SM.infectionChance, Time.deltaTime); //1.0f - Mathf.Pow(SM.infectionChance, Time.deltaTime);
+            float dChance = Mathf.Pow(1.0f - SM.infectionChance, Time.deltaTime);
             float stayHealthyChance = Mathf.Pow(dChance, infectedPeopleNear);
             float rand = Random.Range(0.0f, 1.0f);
 
             if(stayHealthyChance < rand)
             {
                 setInfected();
+            }
+        }
+        else if(state == PersonState.Infected)
+        {
+            float dChance = Mathf.Pow(1.0f - SM.recoveryChance, Time.deltaTime);
+            float rand = Random.Range(0.0f, 1.0f);
+
+            if(dChance < rand)
+            {
+                setRecovered();
             }
         }
     }
@@ -44,10 +61,21 @@ public class PersonScript : MonoBehaviour
 
     public void setInfected()
     {
-        infected = true;
+        if(state != PersonState.Susceptible) return;
+
+        state = PersonState.Infected;
         transform.Find("PersonVisual").GetComponent<SpriteRenderer>().color = Color.red;
         InfectionSpace.SetActive(true);
         InfectionSpace.GetComponent<CircleCollider2D>().radius = SM.infectionRadiusInMeters * SM.sizeScale;
+    }
+
+    public void setRecovered()
+    {
+        if(state != PersonState.Infected) return;
+
+        state = PersonState.Recovered;
+        transform.Find("PersonVisual").GetComponent<SpriteRenderer>().color = Color.blue;
+        InfectionSpace.SetActive(false);
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -70,7 +98,7 @@ public class PersonScript : MonoBehaviour
         }
         else if(other.gameObject.layer == 10) // Layer 10: PersonInfectionSpace
         {
-            if(infected) return;
+            if(state != PersonState.Susceptible) return;
             infectedPeopleNear ++;
         }
     }
@@ -79,7 +107,7 @@ public class PersonScript : MonoBehaviour
     {
         if(other.gameObject.layer == 10) // Layer 10: PersonInfectionSpace
         {
-            if(infected) return;
+            if(state != PersonState.Susceptible) return;
             infectedPeopleNear --;
         }
     }
