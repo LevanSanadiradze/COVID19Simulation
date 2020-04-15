@@ -14,6 +14,8 @@ public class PersonScript : MonoBehaviour
     private PersonState state = PersonState.Susceptible;
     private int infectedPeopleNear = 0;
 
+    private PlayerInRoomData roomData = null;
+
     private SimulationManager SM;
 
     private Rigidbody2D RB;
@@ -29,13 +31,16 @@ public class PersonScript : MonoBehaviour
 
     void Update()
     {
+        if(roomData == null) return;
+
         if(state == PersonState.Susceptible && infectedPeopleNear > 0)
         {
-            float dChance = Mathf.Pow(1.0f - SM.infectionChance, Time.deltaTime);
-            float stayHealthyChance = Mathf.Pow(dChance, infectedPeopleNear);
+            float stayHealthyChance = Mathf.Pow(1.0f - SM.infectionChance, infectedPeopleNear);
+            stayHealthyChance *= (1.0f - roomData.currentRoomScript.roomInfectionChance);
+            float dChance = Mathf.Pow(stayHealthyChance, Time.deltaTime);
             float rand = Random.Range(0.0f, 1.0f);
 
-            if(stayHealthyChance < rand)
+            if(dChance < rand)
             {
                 setInfected();
             }
@@ -50,6 +55,8 @@ public class PersonScript : MonoBehaviour
                 setRecovered();
             }
         }
+
+        goToOtherRooms();
     }
 
     void FixedUpdate()
@@ -70,7 +77,9 @@ public class PersonScript : MonoBehaviour
         if(state != PersonState.Susceptible) return;
 
         state = PersonState.Infected;
-        transform.Find("PersonVisual").GetComponent<SpriteRenderer>().color = Color.red;
+        Transform visual = transform.Find("PersonVisual");
+        visual.gameObject.layer = 12;
+        visual.GetComponent<SpriteRenderer>().color = Color.red;
         InfectionSpace.SetActive(true);
         InfectionSpace.GetComponent<CircleCollider2D>().radius = SM.infectionRadiusInMeters * SM.sizeScale;
     }
@@ -82,6 +91,49 @@ public class PersonScript : MonoBehaviour
         state = PersonState.Recovered;
         transform.Find("PersonVisual").GetComponent<SpriteRenderer>().color = Color.blue;
         InfectionSpace.SetActive(false);
+    }
+
+    private void goToOtherRooms()
+    {
+        RoomScript current = roomData.currentRoomScript;
+        if(roomData.hasParent)
+        {
+            float chance =  Mathf.Pow(1.0f - current.chanceToLeaveRoom, Time.deltaTime);
+            float rand = Random.Range(0.0f, 1.0f);
+
+            if(rand > chance)
+            {
+                transform.position = roomData.perviousPosition;
+                roomData = roomData.parentData;
+            }
+        }
+
+        foreach(RoomScript rs in roomData.currentRoomScript.RoomsToGo)
+        {
+            float chance = Mathf.Pow(1.0f - rs.chanceToEnterRoom, Time.deltaTime);
+            float rand = Random.Range(0.0f, 1.0f);
+
+            if(rand > chance)
+            {
+                float halfPS = 0.5f * SM.personScale;
+                float xScale = (rs.Arena.lossyScale.x / 2.0f) - halfPS;
+                float yScale = (rs.Arena.lossyScale.y / 2.0f) - halfPS;
+                Vector2 xSpawnBorders = new Vector2(rs.Arena.position.x - xScale, rs.Arena.position.x + xScale);
+                Vector2 ySpawnBorders = new Vector2(rs.Arena.position.y - yScale, rs.Arena.position.y + yScale);
+                Vector3 pos = new Vector3(Random.Range(xSpawnBorders.x, xSpawnBorders.y), Random.Range(ySpawnBorders.x, ySpawnBorders.y), 0f);
+
+                PlayerInRoomData PIRD = new PlayerInRoomData();
+                PIRD.currentRoomScript = rs;
+                PIRD.hasParent = true;
+                PIRD.parentData = roomData;
+                PIRD.perviousPosition = transform.position;
+
+                transform.position = pos;
+                roomData = PIRD;
+
+                break;
+            }
+        }
     }
 
     void OnCollisionEnter2D(Collision2D other)
@@ -106,6 +158,14 @@ public class PersonScript : MonoBehaviour
             if(state != PersonState.Susceptible) return;
             infectedPeopleNear ++;
         }
+        else if(other.gameObject.layer == 11) // Layer 11: Room Space
+        {
+            if(roomData == null)
+            {
+                roomData = new PlayerInRoomData();
+                roomData.currentRoomScript = other.transform.parent.GetComponent<RoomScript>();
+            }
+        }
     }
 
     void OnTriggerExit2D(Collider2D other)
@@ -115,5 +175,9 @@ public class PersonScript : MonoBehaviour
             if(state != PersonState.Susceptible) return;
             infectedPeopleNear --;
         }
+        // else if(other.gameObject.layer == 11) // Layer 11: Room Space
+        // {
+            
+        // }
     }
 }
