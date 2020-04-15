@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Person
   - InfectionRadius
+  - Room
   layers:
   - Default
   - TransparentFX
@@ -16,10 +17,10 @@ TagManager:
   - 
   - 
   - PlayerObstacle
-  - PersonCollider
+  - SusceptiblePersonCollider
   - PersonInfectionSpace
-  - 
-  - 
+  - RoomSpace
+  - NonSusceptiblePersonCollider
   - 
   - 
   - 
