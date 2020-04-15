@@ -347,7 +347,6 @@ GameObject:
   m_Component:
   - component: {fileID: 458095858}
   - component: {fileID: 458095857}
-  - component: {fileID: 458095859}
   m_Layer: 0
   m_Name: SimulationManager
   m_TagString: Untagged
@@ -374,7 +373,7 @@ MonoBehaviour:
   numberOfPeople: 1000
   initialInfectedPeople: 1
   infectionRadiusInMeters: 2
-  infectionChance: 1
+  infectionChance: 0.05
   recoveryChance: 0.001
   personSpeedInMPS: 5
   personScale: 0
@@ -393,18 +392,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &458095859
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 458095856}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d0dd47c539127047984d8ba2f01bf6c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1361,7 +1348,6 @@ MonoBehaviour:
   Arena: {fileID: 1997163918}
   RoomsToGo:
   - {fileID: 2015092243}
-  PeopleInRoom: []
 --- !u!1 &1954803382
 GameObject:
   m_ObjectHideFlags: 0
@@ -1551,10 +1537,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomInfectionChance: 0.05
   chanceToEnterRoom: 0.005
-  chanceToLeaveRoom: 0.005
+  chanceToLeaveRoom: 0.02
   Arena: {fileID: 176667751}
   RoomsToGo: []
-  PeopleInRoom: []
 --- !u!1 &2144357222
 GameObject:
   m_ObjectHideFlags: 0
