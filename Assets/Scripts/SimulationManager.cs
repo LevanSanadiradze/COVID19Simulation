@@ -19,12 +19,14 @@ public class SimulationManager : MonoBehaviour
     public float personSpeedInMPS = 5.0f;
 
 
-    private float personScale = 0f;
+    [HideInInspector] public float personScale = 0f;
     private float minPersonScale = 1f;
     private float maxPersonScale = 5f;
 
-    private float XBorder = 75f;
-    private float YBorder = 40f;
+    public Transform initialSpawnSpace;
+
+    private Vector2 xSpawnBorders = Vector2.zero;
+    private Vector2 ySpawnBorders = Vector2.zero;
 
     private Transform PeopleContainer;
 
@@ -34,8 +36,12 @@ public class SimulationManager : MonoBehaviour
 
         calculatePersonScale();
 
-        XBorder -= 0.5f * personScale;
-        YBorder -= 0.5f * personScale;
+        
+        float halfPS = 0.5f * personScale;
+        float xScale = (initialSpawnSpace.lossyScale.x / 2.0f) - halfPS;
+        float yScale = (initialSpawnSpace.lossyScale.y / 2.0f) - halfPS;
+        xSpawnBorders = new Vector2(initialSpawnSpace.position.x - xScale , initialSpawnSpace.position.x + xScale);
+        ySpawnBorders = new Vector2(initialSpawnSpace.position.y - yScale, initialSpawnSpace.position.y + yScale);
 
 
         for(int i = 0; i < numberOfPeople; i++)
@@ -58,7 +64,6 @@ public class SimulationManager : MonoBehaviour
     {
         onTimeScaleUpdate();
         onSizeScaleUpdate();
-        //onNumberOfPeopleUpdate();
     }
 
     private void calculatePersonScale()
@@ -69,7 +74,7 @@ public class SimulationManager : MonoBehaviour
 
     private void addAPerson()
     {
-        Vector3 pos = new Vector3(Random.Range(-XBorder, XBorder), Random.Range(-YBorder, YBorder), 0f);
+        Vector3 pos = new Vector3(Random.Range(xSpawnBorders.x, xSpawnBorders.y), Random.Range(ySpawnBorders.x, ySpawnBorders.y), 0f);
 
         GameObject person = GameObject.Instantiate(PersonPrefab, pos, new Quaternion(0, 0, 0, 0), PeopleContainer) as GameObject;
         person.transform.Find("PersonVisual").localScale = new Vector3(personScale, personScale, personScale);
@@ -92,23 +97,4 @@ public class SimulationManager : MonoBehaviour
             t.Find("PersonVisual").localScale = Vector3.one * personScale;
         }
     }
-
-    // private void onNumberOfPeopleUpdate()
-    // {
-    //     int diff = PeopleContainer.childCount - numberOfPeople;
-    //     if(diff > 0)
-    //     {
-    //         for(int i = 0; i < diff; i++)
-    //         {
-    //             GameObject.Destroy(PeopleContainer.GetChild(i).gameObject);
-    //         }
-    //     }
-    //     else if(diff < 0)
-    //     {
-    //         for(int i = 0; i < -diff; i++)
-    //         {
-    //             addAPerson();
-    //         }
-    //     }
-    // }
 }
