@@ -8,7 +8,15 @@ public class RoomScript : MonoBehaviour
     public float chanceToEnterRoom = 0.1f;
     public float chanceToLeaveRoom = 0.075f;
 
-    public Transform Arena;
-
     public RoomScript[] RoomsToGo = new RoomScript[0];
+
+    [HideInInspector] public List<Transform> MySpaces = new List<Transform>();
+
+    void Awake()
+    {
+        foreach(Transform space in transform.GetChild(1))
+        {
+            MySpaces.Add(space);
+        }
+    }
 }
