@@ -33,7 +33,7 @@ public class PersonScript : MonoBehaviour
     {
         if(roomData == null) return;
 
-        if(state == PersonState.Susceptible && infectedPeopleNear > 0)
+        if(state == PersonState.Susceptible)
         {
             float stayHealthyChance = Mathf.Pow(1.0f - SM.infectionChance, infectedPeopleNear);
             stayHealthyChance *= (1.0f - roomData.currentRoomScript.roomInfectionChance);
@@ -115,11 +115,12 @@ public class PersonScript : MonoBehaviour
 
             if(rand > chance)
             {
+                Transform space = SimulationManager.getRandomSpaceOfRoom(rs);
                 float halfPS = 0.5f * SM.personScale;
-                float xScale = (rs.Arena.lossyScale.x / 2.0f) - halfPS;
-                float yScale = (rs.Arena.lossyScale.y / 2.0f) - halfPS;
-                Vector2 xSpawnBorders = new Vector2(rs.Arena.position.x - xScale, rs.Arena.position.x + xScale);
-                Vector2 ySpawnBorders = new Vector2(rs.Arena.position.y - yScale, rs.Arena.position.y + yScale);
+                float xScale = (space.lossyScale.x / 2.0f) - halfPS;
+                float yScale = (space.lossyScale.y / 2.0f) - halfPS;
+                Vector2 xSpawnBorders = new Vector2(space.position.x - xScale, space.position.x + xScale);
+                Vector2 ySpawnBorders = new Vector2(space.position.y - yScale, space.position.y + yScale);
                 Vector3 pos = new Vector3(Random.Range(xSpawnBorders.x, xSpawnBorders.y), Random.Range(ySpawnBorders.x, ySpawnBorders.y), 0f);
 
                 PlayerInRoomData PIRD = new PlayerInRoomData();
@@ -163,7 +164,7 @@ public class PersonScript : MonoBehaviour
             if(roomData == null)
             {
                 roomData = new PlayerInRoomData();
-                roomData.currentRoomScript = other.transform.parent.GetComponent<RoomScript>();
+                roomData.currentRoomScript = other.transform.parent.parent.GetComponent<RoomScript>();
             }
         }
     }
@@ -175,9 +176,5 @@ public class PersonScript : MonoBehaviour
             if(state != PersonState.Susceptible) return;
             infectedPeopleNear --;
         }
-        // else if(other.gameObject.layer == 11) // Layer 11: Room Space
-        // {
-            
-        // }
     }
 }
