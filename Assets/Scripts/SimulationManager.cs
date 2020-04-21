@@ -9,7 +9,7 @@ public class SimulationManager : MonoBehaviour
     [Range(0.5f, 100.0f)] public float timeScale = 1.0f;
     [Range(0.1f, 10.0f)] public float sizeScale = 0.1f;
 
-    [Range(1, 5000)] public int numberOfPeople = 500;
+    [Range(1, 1000)] public int numberOfPeoplePerInitialRoom = 100;
     public int initialInfectedPeople = 1;
     
     public float infectionRadiusInMeters = 2.0f;
@@ -23,14 +23,10 @@ public class SimulationManager : MonoBehaviour
     private float minPersonScale = 1f;
     private float maxPersonScale = 5f;
 
-    public Transform initialSpawnSpace;
-
-    private Vector2 xSpawnBorders = Vector2.zero;
-    private Vector2 ySpawnBorders = Vector2.zero;
-
     private Transform PeopleContainer;
+    public Transform MainArea;
 
-    void Awake()
+    void Start()
     {
         PeopleContainer = GameObject.Find("PeopleContainer").transform;
 
@@ -38,18 +34,69 @@ public class SimulationManager : MonoBehaviour
 
         
         float halfPS = 0.5f * personScale;
-        float xScale = (initialSpawnSpace.lossyScale.x / 2.0f) - halfPS;
-        float yScale = (initialSpawnSpace.lossyScale.y / 2.0f) - halfPS;
-        xSpawnBorders = new Vector2(initialSpawnSpace.position.x - xScale , initialSpawnSpace.position.x + xScale);
-        ySpawnBorders = new Vector2(initialSpawnSpace.position.y - yScale, initialSpawnSpace.position.y + yScale);
 
 
-        for(int i = 0; i < numberOfPeople; i++)
+        List<RoomScript> rooms = getSpawnRooms();
+
+        foreach(RoomScript room in rooms)
         {
-           addAPerson();
+            for(int i = 0; i < numberOfPeoplePerInitialRoom; i++)
+            {
+                Transform space = getRandomSpaceOfRoom(room);
+
+                float xScale = (space.lossyScale.x / 2.0f) - halfPS;
+                float yScale = (space.lossyScale.y / 2.0f) - halfPS;
+                Vector2 xSpawnBorders = new Vector2(space.position.x - xScale , space.position.x + xScale);
+                Vector2 ySpawnBorders = new Vector2(space.position.y - yScale, space.position.y + yScale);
+
+                addAPerson(xSpawnBorders, ySpawnBorders);
+            }
         }
 
         initiallyInfectPeople();
+    }
+
+    private List<RoomScript> getSpawnRooms()
+    {
+        List<RoomScript> rooms = new List<RoomScript>();
+
+        foreach(Transform row in MainArea)
+        {
+            foreach(Transform district in row)
+            {
+                rooms.Add(district.GetComponent<RoomScript>());
+            }
+        }
+
+        return rooms;
+    }
+
+    public static Transform getRandomSpaceOfRoom(RoomScript room)
+    {
+        List<float> areas = new List<float>();
+        float sumOfAreas = 0.0f;
+
+        foreach(Transform space in room.MySpaces)
+        {
+            float area = space.localScale.x * space.localScale.y;
+            sumOfAreas += area;
+            areas.Add(area);
+        }
+
+        float rand = Random.Range(0f, sumOfAreas);
+
+        float curSum = 0.0f;
+        for(int i = 0; i < areas.Count; i++)
+        {
+            curSum += areas[i];
+
+            if(rand <= curSum)
+            {
+                return room.MySpaces[i];
+            }
+        }
+
+        return room.MySpaces[room.MySpaces.Count - 1];
     }
 
     private void initiallyInfectPeople()
@@ -72,9 +119,9 @@ public class SimulationManager : MonoBehaviour
         personScale = Mathf.Min(personScale, maxPersonScale);
     }
 
-    private void addAPerson()
+    private void addAPerson(Vector2 xBorders, Vector2 yBorders)
     {
-        Vector3 pos = new Vector3(Random.Range(xSpawnBorders.x, xSpawnBorders.y), Random.Range(ySpawnBorders.x, ySpawnBorders.y), 0f);
+        Vector3 pos = new Vector3(Random.Range(xBorders.x, xBorders.y), Random.Range(yBorders.x, yBorders.y), 0f);
 
         GameObject person = GameObject.Instantiate(PersonPrefab, pos, new Quaternion(0, 0, 0, 0), PeopleContainer) as GameObject;
         person.transform.Find("PersonVisual").localScale = new Vector3(personScale, personScale, personScale);
